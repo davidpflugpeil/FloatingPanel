@@ -141,7 +141,7 @@ class FloatingPanelLayoutAdapter {
 
     private var fullInset: CGFloat {
         if layout is FloatingPanelIntrinsicLayout {
-            return min(intrinsicHeight, surfaceView.superview!.bounds.height - safeAreaInsets.bottom)
+            return intrinsicHeight
         } else {
             return layout.insetFor(position: .full) ?? 0.0
         }
@@ -252,11 +252,7 @@ class FloatingPanelLayoutAdapter {
 
         // Flexible surface constarints for full, half, tip and off
         if layout is FloatingPanelIntrinsicLayout {
-            updateIntrinsicHeight()
-            fullConstraints = [
-                surfaceView.topAnchor.constraint(equalTo: vc.layoutGuide.bottomAnchor,
-                                                 constant: -fullInset),
-            ]
+            // Set up on updateHeight()
         } else {
             fullConstraints = [
                 surfaceView.topAnchor.constraint(equalTo: vc.layoutGuide.topAnchor,
@@ -279,42 +275,44 @@ class FloatingPanelLayoutAdapter {
 
     // The method is separated from prepareLayout(to:) for the rotation support
     // It must be called in FloatingPanelController.traitCollectionDidChange(_:)
-    @discardableResult
-    func updateHeight() -> Bool {
-        guard let vc = vc else { return false }
-
-        let height: CGFloat
-        if layout is FloatingPanelIntrinsicLayout {
-            updateIntrinsicHeight()
-            height = min(intrinsicHeight + safeAreaInsets.bottom, vc.view.bounds.height)
-        } else {
-            // Must use the`vc` height, not the screen height because safe area insets
-            // of `vc` are relative values. For example, a view controller in
-            // Navigation controller's safe area insets and frame can be changed whether
-            // the navigation bar is translucent or not.
-            height = vc.view.bounds.height - (safeAreaInsets.top + fullInset)
-        }
-
-        guard heightConstraints.first?.constant != height else { return false }
-
-        log.debug("Update height", height)
+    func updateHeight() {
+        guard let vc = vc else { return }
 
         NSLayoutConstraint.deactivate(heightConstraints)
-        heightConstraints = [
-            surfaceView.heightAnchor.constraint(equalToConstant: height)
-        ]
+
+        if layout is FloatingPanelIntrinsicLayout {
+            updateIntrinsicHeight()
+            let const1 = surfaceView.heightAnchor.constraint(equalToConstant: max(intrinsicHeight + safeAreaInsets.bottom, 0.0))
+            let const2 = surfaceView.heightAnchor.constraint(lessThanOrEqualTo: vc.view.heightAnchor,
+                                                             multiplier: 1.0,
+                                                             constant: -safeAreaInsets.top)
+            const1.priority = .defaultHigh
+            heightConstraints = [
+                const1,
+                const2
+            ]
+        } else {
+            heightConstraints = [
+                surfaceView.heightAnchor.constraint(equalTo: vc.view.heightAnchor,
+                                                    constant: -(safeAreaInsets.top + fullInset)),
+            ]
+        }
         NSLayoutConstraint.activate(heightConstraints)
+
         surfaceView.bottomOverflow = heightBuffer + layout.topInteractionBuffer
 
         if layout is FloatingPanelIntrinsicLayout {
             NSLayoutConstraint.deactivate(fullConstraints)
+            let const1 = surfaceView.topAnchor.constraint(equalTo: vc.layoutGuide.bottomAnchor,
+                                                          constant: -fullInset)
+            let const2 = surfaceView.topAnchor.constraint(greaterThanOrEqualTo: vc.layoutGuide.topAnchor,
+                                                          constant: 0.0)
+            const1.priority = .defaultHigh
             fullConstraints = [
-                surfaceView.topAnchor.constraint(equalTo: vc.layoutGuide.bottomAnchor,
-                                                 constant: -fullInset),
+                const1,
+                const2
             ]
         }
-
-        return true
     }
 
     func activateLayout(of state: FloatingPanelPosition) {
