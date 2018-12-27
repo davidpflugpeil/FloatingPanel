@@ -57,7 +57,7 @@ public enum FloatingPanelPosition: Int, CaseIterable {
 ///
 /// A container view controller to display a floating panel to present contents in parallel as a user wants.
 ///
-public class FloatingPanelController: UIViewController, UIScrollViewDelegate, UIGestureRecognizerDelegate {
+public class FloatingPanelController: UIViewController, PanelTableViewDelegate, UIGestureRecognizerDelegate {
     /// Constants indicating how safe area insets are added to the adjusted content inset.
     public enum ContentInsetAdjustmentBehavior: Int {
         case always
@@ -78,7 +78,7 @@ public class FloatingPanelController: UIViewController, UIScrollViewDelegate, UI
     }
 
     /// Returns the scroll view that the controller tracks.
-    public weak var scrollView: UIScrollView? {
+    public weak var scrollView: PanelTableView? {
         return floatingPanel.scrollView
     }
 
@@ -352,7 +352,7 @@ public class FloatingPanelController: UIViewController, UIScrollViewDelegate, UI
 
         _contentViewController = contentViewController
     }
-    
+
     @available(*, unavailable, renamed: "set(contentViewController:)")
     public override func show(_ vc: UIViewController, sender: Any?) {
         if let target = self.parent?.targetViewController(forAction: #selector(UIViewController.show(_:sender:)), sender: sender) {
@@ -374,11 +374,11 @@ public class FloatingPanelController: UIViewController, UIScrollViewDelegate, UI
     /// - Attention:
     ///     The specified scroll view must be already assigned to the delegate property because the controller intermediates between the various delegate methods.
     ///
-    public func track(scrollView: UIScrollView) {
+    public func track(scrollView: PanelTableView) {
         floatingPanel.scrollView = scrollView
-        if scrollView.delegate !== floatingPanel {
-            floatingPanel.userScrollViewDelegate = scrollView.delegate
-            scrollView.delegate = floatingPanel
+        if scrollView.panelDelegate !== floatingPanel {
+            floatingPanel.userScrollViewDelegate = scrollView.panelDelegate
+            scrollView.panelDelegate = floatingPanel
         }
         switch contentInsetAdjustmentBehavior {
         case .always:

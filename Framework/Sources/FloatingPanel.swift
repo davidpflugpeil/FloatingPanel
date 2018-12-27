@@ -7,7 +7,7 @@ import UIKit
 ///
 /// FloatingPanel presentation model
 ///
-class FloatingPanel: NSObject, UIGestureRecognizerDelegate, UIScrollViewDelegate {
+class FloatingPanel: NSObject, UIGestureRecognizerDelegate, PanelTableViewDelegate {
     /* Cause 'terminating with uncaught exception of type NSException' error on Swift Playground
      unowned let view: UIView
      */
@@ -16,7 +16,7 @@ class FloatingPanel: NSObject, UIGestureRecognizerDelegate, UIScrollViewDelegate
     var layoutAdapter: FloatingPanelLayoutAdapter
     var behavior: FloatingPanelBehavior
 
-    weak var scrollView: UIScrollView? {
+    weak var scrollView: PanelTableView? {
         didSet {
             guard let scrollView = scrollView else { return }
             scrollView.panGestureRecognizer.addTarget(self, action: #selector(handle(panGesture:)))
@@ -24,7 +24,7 @@ class FloatingPanel: NSObject, UIGestureRecognizerDelegate, UIScrollViewDelegate
             scrollIndictorVisible = scrollView.showsVerticalScrollIndicator
         }
     }
-    weak var userScrollViewDelegate: UIScrollViewDelegate?
+    weak var userScrollViewDelegate: PanelTableViewDelegate?
 
     var safeAreaInsets: UIEdgeInsets! {
         get { return layoutAdapter.safeAreaInsets }
@@ -249,9 +249,9 @@ class FloatingPanel: NSObject, UIGestureRecognizerDelegate, UIScrollViewDelegate
 
     var grabberAreaFrame: CGRect {
         let grabberAreaFrame = CGRect(x: surfaceView.bounds.origin.x,
-                                     y: surfaceView.bounds.origin.y,
-                                     width: surfaceView.bounds.width,
-                                     height: FloatingPanelSurfaceView.topGrabberBarHeight * 2)
+                                      y: surfaceView.bounds.origin.y,
+                                      width: surfaceView.bounds.width,
+                                      height: FloatingPanelSurfaceView.topGrabberBarHeight * 2)
         return grabberAreaFrame
     }
 
@@ -317,7 +317,7 @@ class FloatingPanel: NSObject, UIGestureRecognizerDelegate, UIScrollViewDelegate
                 return
             }
 
-            if let animator = self.animator, animator.isInterruptible {
+            if let animator = self.animator {
                 animator.stopAnimation(true)
                 self.animator = nil
             }
@@ -340,7 +340,7 @@ class FloatingPanel: NSObject, UIGestureRecognizerDelegate, UIScrollViewDelegate
         }
     }
 
-    private func shouldScrollViewHandleTouch(_ scrollView: UIScrollView?, point: CGPoint, velocity: CGPoint) -> Bool {
+    private func shouldScrollViewHandleTouch(_ scrollView: PanelTableView?, point: CGPoint, velocity: CGPoint) -> Bool {
         // When no scrollView, nothing to handle.
         guard let scrollView = scrollView else { return false }
 
@@ -348,7 +348,7 @@ class FloatingPanel: NSObject, UIGestureRecognizerDelegate, UIScrollViewDelegate
         if let scrollGestureRecognizers = scrollView.gestureRecognizers {
             for gesture in scrollGestureRecognizers {
                 guard gesture.state == .began || gesture.state == .changed
-                else { continue }
+                    else { continue }
 
                 if gesture !=  scrollView.panGestureRecognizer {
                     return true
@@ -361,8 +361,8 @@ class FloatingPanel: NSObject, UIGestureRecognizerDelegate, UIScrollViewDelegate
             interactionInProgress == false,   // When interaction already in progress, don't scroll.
             scrollView.frame.contains(point), // When point not in scrollView, don't scroll.
             !grabberAreaFrame.contains(point) // When point within grabber area, don't scroll.
-        else {
-            return false
+            else {
+                return false
         }
 
         log.debug("ScrollView.contentOffset >>>", scrollView.contentOffset.y)
@@ -447,7 +447,7 @@ class FloatingPanel: NSObject, UIGestureRecognizerDelegate, UIScrollViewDelegate
         let den = (safeAreaBottomY - posY)
 
         guard num >= 0, den != 0, (num / den >= pth || velocityVector.dy == vth)
-        else { return false }
+            else { return false }
 
         return true
     }
@@ -535,7 +535,6 @@ class FloatingPanel: NSObject, UIGestureRecognizerDelegate, UIScrollViewDelegate
     }
 
     private func startAnimation(to targetPosition: FloatingPanelPosition, at distance: CGFloat, with velocity: CGPoint) {
-        log.debug("startAnimation", targetPosition, distance, velocity)
         let targetY = layoutAdapter.positionY(for: targetPosition)
         let velocityVector = (distance != 0) ? CGVector(dx: 0, dy: max(min(velocity.y/distance, 30.0), -30.0)) : .zero
         let animator = behavior.interactionAnimator(self.viewcontroller, to: targetPosition, with: velocityVector)
@@ -615,7 +614,7 @@ class FloatingPanel: NSObject, UIGestureRecognizerDelegate, UIScrollViewDelegate
                 }
                 return currentY > middleY ? .tip : .half
             case .half:
-                return currentY > middleY ? .tip : .full
+                return translation.y >= 0 ? .tip : .full
             case .tip:
                 if translation.y >= 0 {
                     return .tip
@@ -812,14 +811,14 @@ class FloatingPanel: NSObject, UIGestureRecognizerDelegate, UIScrollViewDelegate
         }
     }
 
-    func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
+    func scrollViewDidEndScrollingAnimation(_ scrollView: PanelTableView) {
         if state != .full {
             initialScrollOffset = scrollView.contentOffset
         }
         userScrollViewDelegate?.scrollViewDidEndScrollingAnimation?(scrollView)
     }
 
-    func scrollViewWillEndDragging(_ scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
+    func scrollViewWillEndDragging(_ scrollView: PanelTableView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
         if stopScrollDeceleration {
             targetContentOffset.pointee = scrollView.contentOffset
             stopScrollDeceleration = false
