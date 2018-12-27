@@ -383,9 +383,13 @@ class FloatingPanel: NSObject, UIGestureRecognizerDelegate, UIScrollViewDelegate
         let targetPosition = self.targetPosition(with: translation, velocity: velocity)
         let distance = self.distance(to: targetPosition, with: translation)
 
+        endInteraction(for: targetPosition)
+
         if isRemovalInteractionEnabled, isBottomState {
             let velocityVector = (distance != 0) ? CGVector(dx: 0,
                                                             dy: max(min(velocity.y/distance, behavior.removalVelocity), 0.0)) : .zero
+
+
 
             if shouldStartRemovalAnimation(with: translation, velocityVector: velocityVector) {
 
@@ -400,9 +404,6 @@ class FloatingPanel: NSObject, UIGestureRecognizerDelegate, UIScrollViewDelegate
                 return
             }
         }
-
-        // Must not call it when removal animation is executied
-        endInteraction(for: targetPosition)
 
         viewcontroller.delegate?.floatingPanelDidEndDragging(viewcontroller, withVelocity: velocity, targetPosition: targetPosition)
         viewcontroller.delegate?.floatingPanelWillBeginDecelerating(viewcontroller)
@@ -449,6 +450,9 @@ class FloatingPanel: NSObject, UIGestureRecognizerDelegate, UIScrollViewDelegate
 
         viewcontroller.delegate?.floatingPanelWillBeginDragging(viewcontroller)
 
+        // Prevent breaking layout by disabling a bottomAnchor of a content VC
+        surfaceView.disableAutoLayout()
+
         viewcontroller.contentViewController?.view?.constraints.forEach({ (const) in
             switch viewcontroller.contentViewController?.layoutGuide.bottomAnchor {
             case const.firstAnchor:
@@ -471,6 +475,8 @@ class FloatingPanel: NSObject, UIGestureRecognizerDelegate, UIScrollViewDelegate
         if targetPosition != .full {
             lockScrollView()
         }
+
+        surfaceView.enableAutoLayout()
 
         viewcontroller.contentViewController?.view?.constraints.forEach({ (const) in
             switch viewcontroller.contentViewController?.layoutGuide.bottomAnchor {
