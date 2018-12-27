@@ -91,25 +91,31 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" distribution="fillProportionally" alignment="center" spacing="22" translatesAutoresizingMaskIntoConstraints="NO" id="n93-ZL-fmC">
-                                <rect key="frame" x="32" y="32" width="311" height="137.33333333333334"/>
+                                <rect key="frame" x="32" y="16" width="311" height="153.33333333333334"/>
                                 <subviews>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Version: 1.0" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="WmC-Tq-NDN">
+                                        <rect key="frame" x="118.33333333333334" y="0.0" width="74.333333333333343" height="15.666666666666666"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                        <nil key="textColor"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="UINavigationBar" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Ulg-gS-ah0">
-                                        <rect key="frame" x="90.666666666666686" y="0.0" width="130" height="22"/>
+                                        <rect key="frame" x="90.666666666666686" y="37.666666666666664" width="130" height="19"/>
                                         <fontDescription key="fontDescription" style="UICTFontTextStyleHeadline"/>
                                         <nil key="textColor"/>
                                         <nil key="highlightedColor"/>
                                     </label>
                                     <stackView opaque="NO" contentMode="scaleToFill" spacing="126" translatesAutoresizingMaskIntoConstraints="NO" id="uEf-g4-CeU">
-                                        <rect key="frame" x="23.333333333333343" y="44" width="264.33333333333326" height="33.666666666666657"/>
+                                        <rect key="frame" x="23.333333333333343" y="78.666666666666671" width="264.33333333333326" height="28.666666666666671"/>
                                         <subviews>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Large Titles" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ogl-S5-4tJ">
-                                                <rect key="frame" x="0.0" y="0.0" width="89.333333333333329" height="33.666666666666664"/>
+                                                <rect key="frame" x="0.0" y="0.0" width="89.333333333333329" height="28.666666666666668"/>
                                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                                 <nil key="textColor"/>
                                                 <nil key="highlightedColor"/>
                                             </label>
                                             <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="js8-Qv-lUC">
-                                                <rect key="frame" x="215.33333333333334" y="0.0" width="51.000000000000028" height="33.666666666666664"/>
+                                                <rect key="frame" x="215.33333333333334" y="0.0" width="51.000000000000028" height="28.666666666666668"/>
                                                 <connections>
                                                     <action selector="toggleLargeTitle:" destination="C1X-9Z-TyQ" eventType="valueChanged" id="FJS-Ty-mCY"/>
                                                 </connections>
@@ -117,16 +123,16 @@
                                         </subviews>
                                     </stackView>
                                     <stackView opaque="NO" contentMode="scaleToFill" spacing="126" translatesAutoresizingMaskIntoConstraints="NO" id="ZtZ-Dz-4cC">
-                                        <rect key="frame" x="23.333333333333343" y="99.666666666666657" width="264.66666666666663" height="37.666666666666657"/>
+                                        <rect key="frame" x="23.333333333333343" y="129.33333333333334" width="264.66666666666663" height="24"/>
                                         <subviews>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Translucent" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Z5i-rm-QgL">
-                                                <rect key="frame" x="0.0" y="0.0" width="89.666666666666671" height="37.666666666666664"/>
+                                                <rect key="frame" x="0.0" y="0.0" width="89.666666666666671" height="24"/>
                                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                                 <nil key="textColor"/>
                                                 <nil key="highlightedColor"/>
                                             </label>
                                             <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="s6b-j9-8Kw">
-                                                <rect key="frame" x="215.66666666666666" y="0.0" width="50.999999999999972" height="37.666666666666664"/>
+                                                <rect key="frame" x="215.66666666666666" y="0.0" width="50.999999999999972" height="24"/>
                                                 <connections>
                                                     <action selector="toggleTranslucent:" destination="C1X-9Z-TyQ" eventType="valueChanged" id="nL4-3L-9hh"/>
                                                 </connections>
@@ -140,8 +146,8 @@
                         <constraints>
                             <constraint firstItem="0hr-ty-yWm" firstAttribute="bottom" secondItem="n93-ZL-fmC" secondAttribute="bottom" id="2Ey-ou-E1M"/>
                             <constraint firstAttribute="trailing" secondItem="n93-ZL-fmC" secondAttribute="trailing" constant="32" id="DdZ-eB-F5s"/>
-                            <constraint firstItem="n93-ZL-fmC" firstAttribute="top" secondItem="af9-Zr-Ppc" secondAttribute="topMargin" constant="32" id="GqT-Z2-cRq"/>
                             <constraint firstItem="n93-ZL-fmC" firstAttribute="leading" secondItem="af9-Zr-Ppc" secondAttribute="leading" constant="32" id="TyK-GP-Ari"/>
+                            <constraint firstItem="n93-ZL-fmC" firstAttribute="top" secondItem="af9-Zr-Ppc" secondAttribute="topMargin" constant="16" id="yg3-zf-qEV"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="0hr-ty-yWm"/>
                     </view>
@@ -149,6 +155,7 @@
                     <connections>
                         <outlet property="largeTitlesSwicth" destination="js8-Qv-lUC" id="FOm-6k-ffi"/>
                         <outlet property="translucentSwicth" destination="s6b-j9-8Kw" id="jmf-WH-bzZ"/>
+                        <outlet property="versionLabel" destination="WmC-Tq-NDN" id="Woh-kK-U0m"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="M9h-4V-3M0" userLabel="First Responder" sceneMemberID="firstResponder"/>

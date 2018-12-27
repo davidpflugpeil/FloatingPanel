@@ -817,7 +817,12 @@ class TwoTabBarPanel2Layout: FloatingPanelLayout {
 class SettingsViewController: InspectableViewController {
     @IBOutlet weak var largeTitlesSwicth: UISwitch!
     @IBOutlet weak var translucentSwicth: UISwitch!
+    @IBOutlet weak var versionLabel: UILabel!
 
+    override func viewDidLoad() {
+        versionLabel.text = "Version: \(Bundle.main.infoDictionary?["CFBundleVersion"] ?? "--")"
+    }
+    
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         if #available(iOS 11.0, *) {
