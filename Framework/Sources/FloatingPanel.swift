@@ -8,9 +8,9 @@ import UIKit
 /// FloatingPanel presentation model
 ///
 class FloatingPanel: NSObject, UIGestureRecognizerDelegate, PanelTableViewDelegate {
-    /* Cause 'terminating with uncaught exception of type NSException' error on Swift Playground
-     unowned let view: UIView
-     */
+        // MUST be a weak reference to prevent UI freeze on the presentaion modally
+    weak var viewcontroller: FloatingPanelController!
+    
     let surfaceView: FloatingPanelSurfaceView
     let backdropView: FloatingPanelBackdropView
     var layoutAdapter: FloatingPanelLayoutAdapter
@@ -25,13 +25,6 @@ class FloatingPanel: NSObject, UIGestureRecognizerDelegate, PanelTableViewDelega
         }
     }
     weak var userScrollViewDelegate: PanelTableViewDelegate?
-
-    var safeAreaInsets: UIEdgeInsets! {
-        get { return layoutAdapter.safeAreaInsets }
-        set { layoutAdapter.safeAreaInsets = newValue }
-    }
-
-    unowned let viewcontroller: FloatingPanelController
 
     private(set) var state: FloatingPanelPosition = .hidden {
         didSet { viewcontroller.delegate?.floatingPanelDidChangePosition(viewcontroller) }
@@ -49,7 +42,8 @@ class FloatingPanel: NSObject, UIGestureRecognizerDelegate, PanelTableViewDelega
     private var initialFrame: CGRect = .zero
     private var initialScrollOffset: CGPoint = .zero
     private var transOffsetY: CGFloat = 0
-    private var interactionInProgress: Bool = false
+
+    var interactionInProgress: Bool = false
 
     // Scroll handling
     private var stopScrollDeceleration: Bool = false
@@ -84,31 +78,6 @@ class FloatingPanel: NSObject, UIGestureRecognizerDelegate, PanelTableViewDelega
         surfaceView.addGestureRecognizer(panGesture)
         panGesture.addTarget(self, action: #selector(handle(panGesture:)))
         panGesture.delegate = self
-    }
-
-    func setUpViews(in vc: UIViewController) {
-        unowned let view = vc.view!
-
-        // FloatingPanelSurfaceWrapperView is needed to update the surface's height
-        // without animation and prevent the backdrop's cut-off on orientation change.
-        let surfaceWrapperView = FloatingPanelSurfaceWrapperView()
-        surfaceWrapperView.frame = view.bounds
-        surfaceWrapperView.backgroundColor = .clear
-
-        view.addSubview(surfaceWrapperView)
-
-        surfaceWrapperView.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            surfaceWrapperView.topAnchor.constraint(equalTo: view.topAnchor, constant: 0.0),
-            surfaceWrapperView.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 0.0),
-            surfaceWrapperView.rightAnchor.constraint(equalTo: view.rightAnchor, constant: 0.0),
-            surfaceWrapperView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: 0.0),
-            ])
-
-        surfaceWrapperView.addSubview(surfaceView)
-
-        view.insertSubview(backdropView, belowSubview: surfaceWrapperView)
-        backdropView.frame = view.bounds
     }
 
     func move(to: FloatingPanelPosition, animated: Bool, completion: (() -> Void)? = nil) {
@@ -180,6 +149,10 @@ class FloatingPanel: NSObject, UIGestureRecognizerDelegate, PanelTableViewDelega
 
         /* log.debug("shouldRecognizeSimultaneouslyWith", otherGestureRecognizer) */
 
+        if viewcontroller.delegate?.floatingPanel(viewcontroller, shouldRecognizeSimultaneouslyWith: otherGestureRecognizer) ?? false {
+            return true
+        }
+
         // all gestures of the tracking scroll view should be recognized in parallel
         // and handle them in self.handle(panGesture:)
         return scrollView?.gestureRecognizers?.contains(otherGestureRecognizer) ?? false
@@ -187,35 +160,14 @@ class FloatingPanel: NSObject, UIGestureRecognizerDelegate, PanelTableViewDelega
 
     public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldBeRequiredToFailBy otherGestureRecognizer: UIGestureRecognizer) -> Bool {
         guard gestureRecognizer == panGesture else { return false }
-
         /* log.debug("shouldBeRequiredToFailBy", otherGestureRecognizer) */
-
-        // The tracking scroll view's gestures should begin without waiting for the pan gesture failure.
-        // `scrollView.gestureRecognizers` can contains the following gestures
-        // * UIScrollViewDelayedTouchesBeganGestureRecognizer
-        // * UIScrollViewPanGestureRecognizer (scrollView.panGestureRecognizer)
-        // * _UIDragAutoScrollGestureRecognizer
-        // * _UISwipeActionPanGestureRecognizer
-        // * UISwipeDismissalGestureRecognizer
-        if let scrollView = scrollView,
-            let scrollGestureRecognizers = scrollView.gestureRecognizers,
-            scrollGestureRecognizers.contains(otherGestureRecognizer) {
-            return false
-        }
-
-        // Long press gesture should begin without waiting for the pan gesture failure.
-        if otherGestureRecognizer is UILongPressGestureRecognizer {
-            return false
-        }
-
-        // Do not begin any other gestures until the pan gesture fails.
-        return true
+        return false
     }
 
     public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRequireFailureOf otherGestureRecognizer: UIGestureRecognizer) -> Bool {
         guard gestureRecognizer == panGesture else { return false }
 
-        log.debug("shouldRequireFailureOf", otherGestureRecognizer)
+        /* log.debug("shouldRequireFailureOf", otherGestureRecognizer) */
 
         // Should begin the pan gesture without waiting for the tracking scroll view's gestures.
         // `scrollView.gestureRecognizers` can contains the following gestures
@@ -232,6 +184,11 @@ class FloatingPanel: NSObject, UIGestureRecognizerDelegate, PanelTableViewDelega
                 return false
             }
         }
+
+        if viewcontroller.delegate?.floatingPanel(viewcontroller, shouldRecognizeSimultaneouslyWith: otherGestureRecognizer) ?? false {
+            return false
+        }
+
 
         switch otherGestureRecognizer {
         case is UIPanGestureRecognizer,
@@ -418,13 +375,17 @@ class FloatingPanel: NSObject, UIGestureRecognizerDelegate, PanelTableViewDelega
             let velocityVector = (distance != 0) ? CGVector(dx: 0,
                                                             dy: max(min(velocity.y/distance, behavior.removalVelocity), 0.0)) : .zero
 
+
+
             if shouldStartRemovalAnimation(with: translation, velocityVector: velocityVector) {
 
                 viewcontroller.delegate?.floatingPanelDidEndDraggingToRemove(viewcontroller, withVelocity: velocity)
                 self.startRemovalAnimation(with: velocityVector) { [weak self] in
                     guard let self = self else { return }
-                    self.viewcontroller.dismiss(animated: false)
-                    self.viewcontroller.delegate?.floatingPanelDidEndRemove(self.viewcontroller)
+                    self.viewcontroller.dismiss(animated: false, completion: { [weak self] in
+                        guard let self = self else { return }
+                        self.viewcontroller.delegate?.floatingPanelDidEndRemove(self.viewcontroller)
+                    })
                 }
                 return
             }
@@ -475,18 +436,16 @@ class FloatingPanel: NSObject, UIGestureRecognizerDelegate, PanelTableViewDelega
 
         viewcontroller.delegate?.floatingPanelWillBeginDragging(viewcontroller)
 
-        if layoutAdapter.layout is FloatingPanelIntrinsicLayout {
-            viewcontroller.contentViewController?.view?.constraints.forEach({ (const) in
-                switch viewcontroller.contentViewController?.layoutGuide.bottomAnchor {
-                case const.firstAnchor:
-                    (const.secondItem as? UIView)?.disableAutoLayout()
-                case const.secondAnchor:
-                    (const.firstItem as? UIView)?.disableAutoLayout()
-                default:
-                    break
-                }
-            })
-        }
+        viewcontroller.contentViewController?.view?.constraints.forEach({ (const) in
+            switch viewcontroller.contentViewController?.layoutGuide.bottomAnchor {
+            case const.firstAnchor:
+                (const.secondItem as? UIView)?.disableAutoLayout()
+            case const.secondAnchor:
+                (const.firstItem as? UIView)?.disableAutoLayout()
+            default:
+                break
+            }
+        })
 
         interactionInProgress = true
     }
@@ -500,18 +459,16 @@ class FloatingPanel: NSObject, UIGestureRecognizerDelegate, PanelTableViewDelega
             lockScrollView()
         }
 
-        if layoutAdapter.layout is FloatingPanelIntrinsicLayout {
-            viewcontroller.contentViewController?.view?.constraints.forEach({ (const) in
-                switch viewcontroller.contentViewController?.layoutGuide.bottomAnchor {
-                case const.firstAnchor:
-                    (const.secondItem as? UIView)?.enableAutoLayout()
-                case const.secondAnchor:
-                    (const.firstItem as? UIView)?.enableAutoLayout()
-                default:
-                    break
-                }
-            })
-        }
+        viewcontroller.contentViewController?.view?.constraints.forEach({ (const) in
+            switch viewcontroller.contentViewController?.layoutGuide.bottomAnchor {
+            case const.firstAnchor:
+                (const.secondItem as? UIView)?.enableAutoLayout()
+            case const.secondAnchor:
+                (const.firstItem as? UIView)?.enableAutoLayout()
+            default:
+                break
+            }
+        })
     }
 
     private func getCurrentY(from rect: CGRect, with translation: CGPoint) -> CGFloat {
